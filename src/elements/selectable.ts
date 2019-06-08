@@ -177,6 +177,7 @@ constructor(element, EventAggregator) {
   diselect(){
 	  
 	this.__isSelected = false;
+	//@ts-ignore
 	this.element.isSelected = false;
 	this.wait = true;
 	this.element.classList.remove('selected');
@@ -226,6 +227,7 @@ constructor(element, EventAggregator) {
 
 		this.element.classList.add('selected');
 		this.__isSelected = true;
+		//@ts-ignore
 		this.element.isSelected = true;
 
 		let eventName = 'selectable.';
