@@ -24,7 +24,7 @@ export class SelectableCustomAttribute {
 	eventName;
 
  	wait = true;
-	element: HTMLElement;
+	element: Element;
 	events: EventAggregator;
 	__isSelected: boolean;
 	__isSelecting: boolean;
@@ -35,7 +35,7 @@ export class SelectableCustomAttribute {
  * @param {EventAggregator} EventAggregator 
  * @memberof SelectableCustomAttribute
  */
-constructor(element, EventAggregator) {
+constructor(element:Element, EventAggregator:EventAggregator) {
 	
     this.element = element;
     this.events = EventAggregator;
