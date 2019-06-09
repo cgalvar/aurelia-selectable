@@ -3,7 +3,6 @@ import {PLATFORM} from 'aurelia-pal';
 
 export function configure(config: FrameworkConfiguration) {
   config.globalResources([
-    PLATFORM.moduleName('./attributes/selectable'),
-    PLATFORM.moduleName('./attributes/one-at-time')
+    PLATFORM.moduleName('./attributes/selectable')
   ]);
 }

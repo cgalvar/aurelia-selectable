@@ -2,7 +2,7 @@ import { inject } from "aurelia-framework";
 import { EventAggregator } from "aurelia-event-aggregator";
 
 @inject(EventAggregator)
-export class OneAtTime{
+export class OneAtTimeCustomAttribute{
 	subscription: any;
 	events: any;
 	currentId: any;
