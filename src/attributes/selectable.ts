@@ -1,248 +1,139 @@
-import {bindable, autoinject} from 'aurelia-framework';
-import { EventAggregator } from 'aurelia-event-aggregator';
+import { bindable, autoinject } from "aurelia-framework";
+import { EventAggregator } from "aurelia-event-aggregator";
 
-var id = 0;
-
-/**
- * 
- * 
- * @export
- * @class SelectableCustomAttribute
- */
 @autoinject
 export class SelectableCustomAttribute {
 
-	@bindable oneAtTime;
 
-	@bindable
-	condition;
+    @bindable
+    groupName:string;
 
-	@bindable
-	record;
+    @bindable
+    oneAtTime:string;
 
-	@bindable
-	eventName;
+    @bindable
+    onSelect:Function;
 
- 	wait = true;
-	element: Element;
-	events: EventAggregator;
-	__isSelected: boolean;
-	__isSelecting: boolean;
- 
-/**
- * Creates an instance of SelectableCustomAttribute.
- * @param {any} element 
- * @param {EventAggregator} EventAggregator 
- * @memberof SelectableCustomAttribute
- */
-constructor(element:Element, EventAggregator:EventAggregator) {
-	
-    this.element = element;
-    this.events = EventAggregator;
-    this.__isSelected = false;
+    @bindable
+    onDiselect: Function;
 
-  }
+    condition: boolean | Function;
+    isSelected: boolean;
 
+    constructor(private element:Element, private events:EventAggregator){}
 
-  bind(){
-	
-	this.canBeSelectable();
-	
-  }
+    listenEvents(){
+        
+        let isSelecting = false;
 
-  conditionChanged(){
-	  this.canBeSelectable();
-  }
+        // prevenimos que se despliegue el menu contextual
+        // on click derecho seleccionamos
+        this.element.addEventListener('contextmenu', e=>{
+            this.run();
+            e.preventDefault();
+            return false;
+        });
+    
+        // preparamos los eventos
 
-  canBeSelectable(){
-	  if (this.condition === true) {
-		  this.listenEvents();
-		  this.onClear();
-		  this.listenWait();
-	  }
+        let	isTouchDevice = 'ontouchstart' in window;
+        let startEvent, finishEvent;
+    
+        
+        if(isTouchDevice){
+            startEvent = 'touchstart';
+            finishEvent = 'touchend';
+            
+            // si movio el dedo, no esta intentando seleccionar
+            document.addEventListener('touchmove', e=>{
+              isSelecting = false;
+            })
+    
+        }
+    
+        else{
+            startEvent = 'mousedown';
+            finishEvent = 'mouseup';
+        }
+    
+          this.element.addEventListener(startEvent, e=>{
+            
+            console.log('seleccionando');
+            
+            isSelecting = true;
+    
+          });
 
-	  else if (this.condition === false) {
-		  return;
-	  }
+          this.element.addEventListener(finishEvent, e=>{
+              console.log('finlizando');
+              if (isSelecting) {
+                  this.run();
+              }
+          })
 
-	  else if (typeof this.condition == 'function') {
-		  let result = this.condition(this.record)
+    
+    }
 
-		  if (result instanceof Promise) {
-			  result.then(confirmation => {
-				  if (confirmation) {
-					  this.listenEvents();
-					  this.onClear();
-					  this.listenWait();
-				  }
-			  })
-				  .catch(error => {
-					  console.error(error)
-				  });
-		  }
+    async run(){
 
-		  else {
-			  if (result) {
-				  this.listenEvents();
-				  this.onClear();
-				  this.listenWait();
-			  }
-		  }
+        let result = await this.evalCondition();
+        if (result){
+            this.select();
+        }
 
-	  }
-
-	  else {
-		  this.listenEvents();
-		  this.onClear();
-		  this.listenWait();
-	  }
-  }
-
-  listenEvents(){
-	
-	this.element.addEventListener('contextmenu', e=>{
-		this.select();
-		e.preventDefault();
-		return false;
-	});
-
-	let	isTouchDevice = 'ontouchstart' in window;
-	let startEvent, finishEvent;
+        else{
+           this.diselect(); 
+        }
 
 
-	if(isTouchDevice){
-		startEvent = 'touchstart';
-		finishEvent = 'touchend';
+    }
 
-		document.addEventListener('touchmove', e=>{
-		  this.__isSelecting = false;
-  		})
+    select(){
+        this.onSelect();
+        this.isSelected = true;
+        this.element.classList.add('selectable-selected');
+        if (this.oneAtTime) {
+            let eventName = `selectable.${this.groupName}.select`;
+            this.events.publish(eventName);
+            this.events.subscribeOnce(eventName, ()=>{
+                this.diselect();
+            })
+        }
+    }
 
-	}
+    diselect(){
+        this.onDiselect();
+        this.isSelected = false;
+        this.element.classList.remove('selectable-selected');
+    }
 
-	else{
-		startEvent = 'mousedown';
-		finishEvent = 'mouseup';
-	}
+    
 
-  	this.element.addEventListener(startEvent, e=>{
-		
-		console.log('seleccionando');
-		
-		this.__isSelecting = true;
+    async evalCondition(){
+        // si es falso no hacer nada
+        if (this.condition === true) {
+            return true;
+        }
 
-		  if(this.wait){
-			this.waitAndselect();
-		  }
+        // si es una funcion, ejecuta y evalua el resultado
+        else if (typeof this.condition === 'function') {
+             let result = this.condition();
 
-		  else
-		  	this.select();
+             // si es promesa
+             if (result instanceof Promise) {
+                // true or false 
+                result = await result;
 
-  	});
-  	this.element.addEventListener(finishEvent, e=>{
-		  console.log('finlizando');
-		  this.__isSelecting = false;
+             }
 
-			let eventName = `selectable.${this.eventName ? (this.eventName + '.'):''}mouseup`;
+             if (result === true) {
+                    return true;
+             }
 
-		  this.events.publish(eventName);
-  	})
+             return false;
 
-  	let invalids = this.element.querySelectorAll('.selectable-invalid');
-  	
-  	if (invalids) {
-  		for (var i = 0; i < invalids.length; i++) {
-  			let invalid = invalids[i];
 
-  			invalid.addEventListener(startEvent, e=>{
-  				e.stopPropagation()
-  			})
-
-  		}
-  	}
-
-  }
-
-  onClear(){
-	
-	let eventName = `selectable.${this.eventName ? (this.eventName + '.') : ''}clear`;
-
-  	this.events.subscribe(eventName, response=>{
-		debugger;  
-		this.diselect();
-	})
-	  
-  }
-
-  diselect(){
-	  
-	this.__isSelected = false;
-	//@ts-ignore
-	this.element.isSelected = false;
-	this.wait = true;
-	this.element.classList.remove('selected');
-  }
-
-  //TODO:ya no recuerdo para que es este metodo, averiguarlo y documentar
-  listenWait(){
-	  this.events.subscribe('selectable.wait', response=>{
-		  
-		  this.wait = response;
-	  })
-  }
-
-  waitAndselect(){
-
-  	setTimeout(e=>{
-		if (this.__isSelecting) {
-
-			this.select();
-			
-
-		}
-
-	}, 500);
-
-  }
-
-  select(){
-	if (this.__isSelected) {
-		this.diselect();
-		let eventName = `selectable.${this.eventName ? (this.eventName + '.') : ''}onDiselect`;
-		this.events.publish(eventName, this.record)
-	}
-
-	else{
-		if(this.oneAtTime){
-			debugger;
-			let name;
-			if(this.eventName){
-				name = 'selectable.' + this.eventName + '.clear'; 
-			}
-			else{
-				name = 'selectable.clear'; 
-			}
-			this.events.publish(name, this.record)
-		}
-
-		this.element.classList.add('selected');
-		this.__isSelected = true;
-		//@ts-ignore
-		this.element.isSelected = true;
-
-		let eventName = 'selectable.';
-
-		if(this.eventName){
-			eventName += this.eventName;
-		}
-		else{
-			eventName += 'onSelect';
-		}
-
-		this.events.publish(eventName, this.record)
-		
-	}
-  }
+        }
+    }
 
 }
-
