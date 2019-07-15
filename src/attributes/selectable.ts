@@ -1,5 +1,5 @@
 import { bindable, autoinject } from "aurelia-framework";
-import { EventAggregator } from "aurelia-event-aggregator";
+import { EventAggregator, Subscription } from "aurelia-event-aggregator";
 
 @autoinject
 export class SelectableCustomAttribute {
@@ -9,38 +9,43 @@ export class SelectableCustomAttribute {
     groupName:string;
 
     @bindable
-    oneAtTime:string;
-
-    @bindable
     onSelect:Function;
 
     @bindable
     onDiselect: Function;
 
-    condition: boolean | Function;
+    canBeSelected: boolean | Function;
     isSelected: boolean;
 
-    constructor(private element:Element, private events:EventAggregator){}
+    // time to long press in seconds
+    @bindable longPressTime: number = 0.5;
+    eventSubscription: Subscription;
+
+    constructor(private element:Element, private events:EventAggregator){
+        this.listenEvents();
+    }
 
     listenEvents(){
-        
         let isSelecting = false;
-
         // prevenimos que se despliegue el menu contextual
         // on click derecho seleccionamos
         this.element.addEventListener('contextmenu', e=>{
+            console.log('evento contextmenu');
+            isSelecting = false;
             this.run();
             e.preventDefault();
             return false;
         });
     
-        // preparamos los eventos
+        // Long Click
 
+        // preparamos los eventos
         let	isTouchDevice = 'ontouchstart' in window;
         let startEvent, finishEvent;
     
         
         if(isTouchDevice){
+            
             startEvent = 'touchstart';
             finishEvent = 'touchend';
             
@@ -55,35 +60,54 @@ export class SelectableCustomAttribute {
             startEvent = 'mousedown';
             finishEvent = 'mouseup';
         }
-    
+        
+        let timeOutId;
+
           this.element.addEventListener(startEvent, e=>{
-            
-            console.log('seleccionando');
-            
             isSelecting = true;
+            timeOutId = setTimeout(() => {
+                if (isSelecting) {
+                    this.run();
+                    isSelecting = false;
+                }
+            }, this.longPressTime * 1000);
     
           });
 
           this.element.addEventListener(finishEvent, e=>{
-              console.log('finlizando');
+              
               if (isSelecting) {
-                  this.run();
+                  console.log('clear isSelecting');
+                  isSelecting = false;
+                  clearTimeout(timeOutId);
+                  
               }
-          })
 
+
+          })
     
     }
 
-    async run(){
+    longClick(){
+        
+       
+    }
 
-        let result = await this.evalCondition();
-        if (result){
-            this.select();
+    async run(){
+        debugger;
+        if(this.isSelected){
+            this.diselect();
         }
 
         else{
-           this.diselect(); 
+            let result = await this.evalCondition();
+            
+            if (result){
+                this.select();
+            }
+
         }
+
 
 
     }
@@ -91,11 +115,12 @@ export class SelectableCustomAttribute {
     select(){
         this.onSelect();
         this.isSelected = true;
-        this.element.classList.add('selectable-selected');
-        if (this.oneAtTime) {
+        this.selectedStyle();
+        if (this.groupName) {
             let eventName = `selectable.${this.groupName}.select`;
             this.events.publish(eventName);
-            this.events.subscribeOnce(eventName, ()=>{
+            this.eventSubscription = this.events.subscribeOnce(eventName, ()=>{
+                debugger;
                 this.diselect();
             })
         }
@@ -104,20 +129,33 @@ export class SelectableCustomAttribute {
     diselect(){
         this.onDiselect();
         this.isSelected = false;
-        this.element.classList.remove('selectable-selected');
+        this.diselectedStyle();
+        this.eventSubscription.dispose();
     }
 
-    
+    selectedStyle(){
+
+        //@ts-ignore
+        this.element.style.outline = '1px solid gray';
+
+    }
+
+    diselectedStyle(){
+
+        //@ts-ignore
+        this.element.style.outline = 'none';
+
+    }
 
     async evalCondition(){
         // si es falso no hacer nada
-        if (this.condition === true) {
+        if (this.canBeSelected === true || this.canBeSelected === undefined) {
             return true;
         }
 
         // si es una funcion, ejecuta y evalua el resultado
-        else if (typeof this.condition === 'function') {
-             let result = this.condition();
+        else if (typeof this.canBeSelected === 'function') {
+             let result = this.canBeSelected();
 
              // si es promesa
              if (result instanceof Promise) {

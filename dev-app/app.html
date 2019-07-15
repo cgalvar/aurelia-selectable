@@ -7,6 +7,16 @@
   <hr>
   <h2>Custom element "hello-world"</h2>
   <p>Usage:&nbsp;<code>&lt;hello-world message.bind="message"&gt;&lt;/hello-world&gt;</code></p>
-  <hello-world selectable = 'on-select.call = funcion(value) one-at-a-time = ""' message.bind="message"></hello-world>
+  
+  <require from="resources/attributes/selectable"></require>
+
+  <ul>
+    <li selectable = 'on-select.call : onSelect(row); on-diselect.call : onDiselect(row); group-name: "li-row"
+    ' 
+      repeat.for = 'row of rows'
+      >
+      ${row.name}
+    </li>
+  </ul>
 
 </template>

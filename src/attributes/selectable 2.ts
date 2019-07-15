@@ -57,7 +57,7 @@ constructor(element:Element, EventAggregator:EventAggregator) {
 	  if (this.condition === true) {
 		  this.listenEvents();
 		  this.onClear();
-		  this.listenWait();
+		  
 	  }
 
 	  else if (this.condition === false) {
@@ -72,7 +72,7 @@ constructor(element:Element, EventAggregator:EventAggregator) {
 				  if (confirmation) {
 					  this.listenEvents();
 					  this.onClear();
-					  this.listenWait();
+					  
 				  }
 			  })
 				  .catch(error => {
@@ -84,7 +84,7 @@ constructor(element:Element, EventAggregator:EventAggregator) {
 			  if (result) {
 				  this.listenEvents();
 				  this.onClear();
-				  this.listenWait();
+				  
 			  }
 		  }
 
@@ -93,7 +93,7 @@ constructor(element:Element, EventAggregator:EventAggregator) {
 	  else {
 		  this.listenEvents();
 		  this.onClear();
-		  this.listenWait();
+		  
 	  }
   }
 
@@ -137,7 +137,8 @@ constructor(element:Element, EventAggregator:EventAggregator) {
 		  else
 		  	this.select();
 
-  	});
+	  });
+	  
   	this.element.addEventListener(finishEvent, e=>{
 		  console.log('finlizando');
 		  this.__isSelecting = false;
