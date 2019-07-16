@@ -101,7 +101,7 @@ export class SelectableCustomAttribute {
     }
 
     async run(){
-        debugger;
+        
         if(this.isSelected){
             this.diselect();
         }
@@ -139,17 +139,11 @@ export class SelectableCustomAttribute {
     }
 
     selectedStyle(){
-
-        //@ts-ignore
-        this.element.style.outline = '1px solid gray';
-
+        this.element.classList.add('selectable-selected');
     }
 
     diselectedStyle(){
-
-        //@ts-ignore
-        this.element.style.outline = 'none';
-
+        this.element.classList.remove('selectable-selected');
     }
 
     async evalCondition(){
