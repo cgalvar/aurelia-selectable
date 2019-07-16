@@ -6,3 +6,5 @@ export function configure(config: FrameworkConfiguration) {
     PLATFORM.moduleName('./attributes/selectable')
   ]);
 }
+
+export * from './clear-group';

@@ -8,6 +8,8 @@ export class SelectableCustomAttribute {
     @bindable
     groupName:string;
 
+    @bindable oneAtTime: boolean = false;
+
     @bindable
     onSelect:Function;
 
@@ -21,6 +23,8 @@ export class SelectableCustomAttribute {
     @bindable longPressTime: number = 0.5;
     eventSubscription: Subscription;
 
+
+    
     constructor(private element:Element, private events:EventAggregator){
         this.listenEvents();
     }
@@ -88,9 +92,12 @@ export class SelectableCustomAttribute {
     
     }
 
-    longClick(){
-        
-       
+    clearGroup(){
+        if (this.groupName) {
+            this.events.subscribe(`selectable.clear-group.${this.groupName}`, ()=>{
+                this.diselect();
+            });
+        }
     }
 
     async run(){
@@ -108,15 +115,13 @@ export class SelectableCustomAttribute {
 
         }
 
-
-
     }
 
     select(){
         this.onSelect();
         this.isSelected = true;
         this.selectedStyle();
-        if (this.groupName) {
+        if (this.groupName && this.oneAtTime) {
             let eventName = `selectable.${this.groupName}.select`;
             this.events.publish(eventName);
             this.eventSubscription = this.events.subscribeOnce(eventName, ()=>{
