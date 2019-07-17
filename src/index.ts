@@ -7,4 +7,4 @@ export function configure(config: FrameworkConfiguration) {
   ]);
 }
 
-export * from './clear-group';
+export * from './selectable-helper';

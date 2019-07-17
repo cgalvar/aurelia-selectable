@@ -1,6 +1,8 @@
 import { EventAggregator } from "aurelia-event-aggregator";
+import { autoinject } from "aurelia-framework";
 
-export class selectableHelper {
+@autoinject
+export class SelectableHelper {
     
     constructor(private events:EventAggregator) {
         
