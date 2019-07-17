@@ -27,6 +27,10 @@ export class SelectableCustomAttribute {
     
     constructor(private element:Element, private events:EventAggregator){
         this.listenEvents();
+        
+    }
+
+    bind(){
         this.listenClearGroup();
     }
 
@@ -93,9 +97,14 @@ export class SelectableCustomAttribute {
     
     }
 
+    
+
     listenClearGroup(){
+        debugger
         if (this.groupName) {
-            this.events.subscribe(`selectable.clear-group.${this.groupName}`, ()=>{
+            let eventName = `selectable.clear-group.${this.groupName}`;
+            this.events.subscribe(eventName, ()=>{
+                debugger;
                 this.diselect();
             });
         }

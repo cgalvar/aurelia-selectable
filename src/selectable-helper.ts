@@ -9,7 +9,8 @@ export class SelectableHelper {
     }
 
     clearGroup(groupName:string) {
-        this.events.publish(`selectable.clear-group.${groupName}`);
+        let eventName = `selectable.clear-group.${groupName}`;
+        this.events.publish(eventName);
     }
 
 }

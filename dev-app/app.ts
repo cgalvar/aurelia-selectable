@@ -1,6 +1,14 @@
+import { SelectableHelper } from "resources";
+import { autoinject } from "aurelia-framework";
+
+@autoinject
 export class App {
   public message: string = 'from Aurelia!';
   rows: any[];
+
+  constructor(private selectable:SelectableHelper){
+
+  }
 
   activate(){
     this.setRows();
@@ -33,6 +41,10 @@ export class App {
   onDiselect(row){
     debugger;
     console.log(`row ${row.name} diselected`);
+  }
+
+  clear(){
+    this.selectable.clearGroup('list')
   }
 
 }
